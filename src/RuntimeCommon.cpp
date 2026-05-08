@@ -116,6 +116,13 @@ SymExpr _sym_get_parameter_expression(uint8_t index) {
   return g_function_arguments[index];
 }
 
+SymExpr _sym_build_zext_or_trunc(SymExpr expr, uint8_t bits) {
+  if (expr == nullptr)
+    return nullptr;
+
+  return resizeUnsignedInteger(expr, bits);
+}
+
 void _sym_memcpy(uint8_t *dest, const uint8_t *src, size_t length) {
   if (isConcrete(src, length) && isConcrete(dest, length))
     return;

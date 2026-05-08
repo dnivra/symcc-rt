@@ -150,6 +150,7 @@ SymExpr _sym_build_float_unordered_not_equal(SymExpr a, SymExpr b);
 SymExpr _sym_build_sext(nullable SymExpr expr, uint8_t bits);
 SymExpr _sym_build_zext(nullable SymExpr expr, uint8_t bits);
 SymExpr _sym_build_trunc(nullable SymExpr expr, uint8_t bits);
+SymExpr _sym_build_zext_or_trunc(nullable SymExpr expr, uint8_t bits);
 SymExpr _sym_build_bswap(SymExpr expr);
 SymExpr _sym_build_int_to_float(SymExpr value, int is_double, int is_signed);
 SymExpr _sym_build_float_to_float(SymExpr expr, int to_double);
