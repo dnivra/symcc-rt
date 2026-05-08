@@ -82,6 +82,21 @@ SymExpr buildOverflowResult(SymExpr result_expr, SymExpr overflow,
                                 : _sym_concat_helper(padding, overflow_byte));
 }
 
+SymExpr resizeUnsignedInteger(SymExpr expr, size_t targetBits) {
+  size_t exprBits = _sym_bits_helper(expr);
+  if (exprBits == targetBits)
+    return expr;
+
+  if (exprBits < targetBits) {
+    size_t extraBits = targetBits - exprBits;
+    assert(extraBits <= 255);
+    return _sym_build_zext(expr, static_cast<uint8_t>(extraBits));
+  }
+
+  assert(targetBits <= 255);
+  return _sym_build_trunc(expr, static_cast<uint8_t>(targetBits));
+}
+
 } // namespace
 
 void _sym_set_return_expression(SymExpr expr) { g_return_value = expr; }
@@ -433,20 +448,29 @@ SymExpr _sym_build_mul_overflow(SymExpr a, SymExpr b, bool is_signed,
 }
 
 SymExpr _sym_build_funnel_shift_left(SymExpr a, SymExpr b, SymExpr c) {
-  size_t bits = _sym_bits_helper(c);
+  size_t bits = _sym_bits_helper(a);
+  assert(_sym_bits_helper(b) == bits);
+  assert(_sym_bits_helper(c) == bits);
+
   SymExpr concat = _sym_concat_helper(a, b);
   SymExpr shift = _sym_build_unsigned_rem(c, _sym_build_integer(bits, bits));
+  shift = resizeUnsignedInteger(shift, _sym_bits_helper(concat));
 
-  return _sym_extract_helper(_sym_build_shift_left(concat, shift), 0, bits);
+  return _sym_extract_helper(_sym_build_shift_left(concat, shift),
+                             2 * bits - 1, bits);
 }
 
 SymExpr _sym_build_funnel_shift_right(SymExpr a, SymExpr b, SymExpr c) {
-  size_t bits = _sym_bits_helper(c);
+  size_t bits = _sym_bits_helper(a);
+  assert(_sym_bits_helper(b) == bits);
+  assert(_sym_bits_helper(c) == bits);
+
   SymExpr concat = _sym_concat_helper(a, b);
   SymExpr shift = _sym_build_unsigned_rem(c, _sym_build_integer(bits, bits));
+  shift = resizeUnsignedInteger(shift, _sym_bits_helper(concat));
 
-  return _sym_extract_helper(_sym_build_logical_shift_right(concat, shift), 0,
-                             bits);
+  return _sym_extract_helper(_sym_build_logical_shift_right(concat, shift),
+                             bits - 1, 0);
 }
 
 SymExpr _sym_build_abs(SymExpr expr) {
